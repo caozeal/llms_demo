@@ -1,5 +1,6 @@
 import os
 
+os.environ["HTTPS_PROXY"] = "http://127.0.0.1:15236"
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 # Helper function for printing docs
@@ -24,7 +25,7 @@ text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100
 texts = text_splitter.split_documents(documents)
 
 embedding = JinaEmbeddings(model_name="jina-embeddings-v2-base-en")
-retriever = FAISS.from_documents(texts, embedding).as_retriever(search_kwargs={"k": 20})
+retriever = FAISS.from_documents(texts, embedding).as_retriever(search_kwargs={"k": 10})
 
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
@@ -41,9 +42,11 @@ compression_retriever = ContextualCompressionRetriever(
     base_compressor=compressor, base_retriever=retriever
 )
 
+t1 = time.time()
 compressed_docs = compression_retriever.get_relevant_documents(
     "what is reranker?"
 )
+t2 = time.time()
 pretty_print_docs(compressed_docs)
-t2 = time.time_ns() / 1_000_000
-print("used", t2-t1, "ms")
+
+print("used", t2-t1, "s")
